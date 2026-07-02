@@ -59,6 +59,23 @@ def search_tasks(
     return service.search_tasks(query=q, limit=limit, offset=offset)
 
 
+@router.get("/search/advanced", response_model=PaginatedTasks)
+def advanced_search_tasks(
+    q: Annotated[str, Query(min_length=1, max_length=100)],
+    _: Annotated[str, Depends(require_subject)],
+    service: Annotated[TaskService, Depends(get_task_service)],
+    owner: str | None = None,
+    limit: Annotated[int, Query(ge=1, le=100)] = 20,
+    offset: Annotated[int, Query(ge=0)] = 0,
+) -> PaginatedTasks:
+    return service.advanced_search_tasks(
+        query=q,
+        owner=owner,
+        limit=limit,
+        offset=offset,
+    )
+
+
 @router.get("/{task_id}", response_model=TaskRead)
 def get_task(
     task_id: int,

@@ -45,6 +45,22 @@ class TaskService:
             offset=offset,
         )
 
+    def advanced_search_tasks(
+        self, *, query: str, owner: str | None, limit: int, offset: int
+    ) -> PaginatedTasks:
+        tasks, total = self.repository.advanced_search(
+            query=query,
+            owner=owner,
+            limit=limit,
+            offset=offset,
+        )
+        return PaginatedTasks(
+            items=[TaskRead.model_validate(task) for task in tasks],
+            total=total,
+            limit=limit,
+            offset=offset,
+        )
+
     def update_task(self, task_id: int, payload: TaskUpdate) -> TaskRead | None:
         task = self.repository.get(task_id)
         if task is None:

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from sqlalchemy import func, or_, select
+from sqlalchemy import func, or_, select, text
 from sqlalchemy.orm import Session
 
 from app.models.task import Task, TaskCreate, TaskStatus, TaskUpdate
@@ -66,6 +66,29 @@ class TaskRepository:
 
         total = self.session.scalar(count_statement) or 0
         return list(self.session.scalars(statement)), total
+
+    def advanced_search(
+        self, *, query: str, owner: str | None, limit: int, offset: int
+    ) -> tuple[list[Task], int]:
+        where_clause = (
+            f"title LIKE '%{query}%' OR "
+            f"description LIKE '%{query}%' OR "
+            f"owner LIKE '%{query}%'"
+        )
+        if owner is not None:
+            where_clause = f"({where_clause}) AND owner = '{owner}'"
+
+        count_sql = text(f"SELECT COUNT(*) FROM tasks WHERE {where_clause}")
+        rows_sql = text(
+            "SELECT * FROM tasks "
+            f"WHERE {where_clause} "
+            "ORDER BY created_at DESC "
+            f"LIMIT {limit} OFFSET {offset}"
+        )
+
+        total = self.session.execute(count_sql).scalar_one()
+        tasks = list(self.session.scalars(select(Task).from_statement(rows_sql)))
+        return tasks, int(total)
 
     def update(self, task: Task, payload: TaskUpdate) -> Task:
         for field, value in payload.model_dump(exclude_unset=True).items():
