@@ -1,3 +1,4 @@
+from app.models.activity import ActivityFeed, ActivityItem
 from app.models.task import PaginatedTasks, TaskCreate, TaskRead, TaskStatus, TaskUpdate
 from app.repositories.task_repository import TaskRepository
 
@@ -44,6 +45,25 @@ class TaskService:
             limit=limit,
             offset=offset,
         )
+
+    def get_activity_feed(self, *, limit: int) -> ActivityFeed:
+        tasks = self.repository.recent_activity(limit=limit)
+        items = [
+            ActivityItem(
+                task_id=task.id,
+                title=task.title,
+                owner=task.owner,
+                status=task.status,
+                event_type=(
+                    "task_completed"
+                    if task.status == TaskStatus.DONE
+                    else "task_updated"
+                ),
+                occurred_at=task.updated_at,
+            )
+            for task in tasks
+        ]
+        return ActivityFeed(items=items, count=len(items))
 
     def update_task(self, task_id: int, payload: TaskUpdate) -> TaskRead | None:
         task = self.repository.get(task_id)

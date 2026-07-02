@@ -20,6 +20,16 @@ class TaskRepository:
     def get(self, task_id: int) -> Task | None:
         return self.session.get(Task, task_id)
 
+    def recent_activity(self, *, limit: int) -> list[Task]:
+        id_statement = select(Task.id).order_by(Task.updated_at.desc()).limit(limit)
+        task_ids = list(self.session.scalars(id_statement))
+        tasks: list[Task] = []
+        for task_id in task_ids:
+            task = self.session.get(Task, task_id)
+            if task is not None:
+                tasks.append(task)
+        return tasks
+
     def list_tasks(
         self,
         *,

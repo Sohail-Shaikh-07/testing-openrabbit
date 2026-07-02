@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.core.auth import require_subject
 from app.db.session import get_session
+from app.models.activity import ActivityFeed
 from app.models.task import (
     PaginatedTasks,
     TaskCreate,
@@ -57,6 +58,15 @@ def search_tasks(
     offset: Annotated[int, Query(ge=0)] = 0,
 ) -> PaginatedTasks:
     return service.search_tasks(query=q, limit=limit, offset=offset)
+
+
+@router.get("/activity", response_model=ActivityFeed)
+def activity_feed(
+    _: Annotated[str, Depends(require_subject)],
+    service: Annotated[TaskService, Depends(get_task_service)],
+    limit: Annotated[int, Query(ge=1, le=50)] = 20,
+) -> ActivityFeed:
+    return service.get_activity_feed(limit=limit)
 
 
 @router.get("/{task_id}", response_model=TaskRead)
