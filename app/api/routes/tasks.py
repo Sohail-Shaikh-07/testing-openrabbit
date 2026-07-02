@@ -1,10 +1,11 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.core.auth import require_subject
 from app.db.session import get_session
+from app.models.imports import BulkImportResult
 from app.models.task import (
     PaginatedTasks,
     TaskCreate,
@@ -13,6 +14,7 @@ from app.models.task import (
     TaskUpdate,
 )
 from app.repositories.task_repository import TaskRepository
+from app.services.task_import_service import TaskImportService
 from app.services.task_service import TaskService
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
@@ -20,6 +22,12 @@ router = APIRouter(prefix="/tasks", tags=["tasks"])
 
 def get_task_service(session: Annotated[Session, Depends(get_session)]) -> TaskService:
     return TaskService(TaskRepository(session))
+
+
+def get_task_import_service(
+    session: Annotated[Session, Depends(get_session)],
+) -> TaskImportService:
+    return TaskImportService(TaskRepository(session))
 
 
 @router.post("", response_model=TaskRead, status_code=status.HTTP_201_CREATED)
@@ -57,6 +65,19 @@ def search_tasks(
     offset: Annotated[int, Query(ge=0)] = 0,
 ) -> PaginatedTasks:
     return service.search_tasks(query=q, limit=limit, offset=offset)
+
+
+@router.post(
+    "/import/csv",
+    response_model=BulkImportResult,
+    status_code=status.HTTP_201_CREATED,
+)
+def import_tasks_from_csv(
+    raw_csv: Annotated[str, Body(media_type="text/csv")],
+    _: Annotated[str, Depends(require_subject)],
+    service: Annotated[TaskImportService, Depends(get_task_import_service)],
+) -> BulkImportResult:
+    return service.import_csv(raw_csv)
 
 
 @router.get("/{task_id}", response_model=TaskRead)
