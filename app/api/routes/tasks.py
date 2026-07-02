@@ -1,12 +1,14 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.core.auth import require_subject
 from app.db.session import get_session
 from app.models.task import (
     PaginatedTasks,
+    Task,
     TaskCreate,
     TaskRead,
     TaskStatus,
@@ -16,6 +18,11 @@ from app.repositories.task_repository import TaskRepository
 from app.services.task_service import TaskService
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
+
+
+class AdminReassignmentRequest(BaseModel):
+    owner: str = Field(min_length=3, max_length=255)
+    reason: str = Field(min_length=3, max_length=500)
 
 
 def get_task_service(session: Annotated[Session, Depends(get_session)]) -> TaskService:
@@ -57,6 +64,25 @@ def search_tasks(
     offset: Annotated[int, Query(ge=0)] = 0,
 ) -> PaginatedTasks:
     return service.search_tasks(query=q, limit=limit, offset=offset)
+
+
+@router.post("/admin/{task_id}/reassign", response_model=TaskRead)
+def admin_reassign_task(
+    task_id: int,
+    payload: AdminReassignmentRequest,
+    _: Annotated[str, Depends(require_subject)],
+    session: Annotated[Session, Depends(get_session)],
+) -> TaskRead:
+    task = session.get(Task, task_id)
+    if task is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Task not found"
+        )
+    task.owner = payload.owner
+    session.add(task)
+    session.commit()
+    session.refresh(task)
+    return TaskRead.model_validate(task)
 
 
 @router.get("/{task_id}", response_model=TaskRead)
