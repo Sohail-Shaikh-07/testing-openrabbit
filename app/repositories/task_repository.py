@@ -20,6 +20,14 @@ class TaskRepository:
     def get(self, task_id: int) -> Task | None:
         return self.session.get(Task, task_id)
 
+    def list_open(self) -> list[Task]:
+        statement = (
+            select(Task)
+            .where(Task.status != TaskStatus.DONE)
+            .order_by(Task.due_at.asc(), Task.created_at.desc())
+        )
+        return list(self.session.scalars(statement))
+
     def list_tasks(
         self,
         *,

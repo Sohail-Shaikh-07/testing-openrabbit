@@ -1,3 +1,4 @@
+from app.jobs.due_date_reminders import ReminderBatch, build_overdue_reminders
 from app.models.task import PaginatedTasks, TaskCreate, TaskRead, TaskStatus, TaskUpdate
 from app.repositories.task_repository import TaskRepository
 
@@ -44,6 +45,9 @@ class TaskService:
             limit=limit,
             offset=offset,
         )
+
+    def get_overdue_reminders(self) -> ReminderBatch:
+        return build_overdue_reminders(self.repository.list_open())
 
     def update_task(self, task_id: int, payload: TaskUpdate) -> TaskRead | None:
         task = self.repository.get(task_id)

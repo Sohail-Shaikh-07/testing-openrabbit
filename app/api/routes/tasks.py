@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.core.auth import require_subject
 from app.db.session import get_session
+from app.jobs.due_date_reminders import ReminderBatch
 from app.models.task import (
     PaginatedTasks,
     TaskCreate,
@@ -57,6 +58,14 @@ def search_tasks(
     offset: Annotated[int, Query(ge=0)] = 0,
 ) -> PaginatedTasks:
     return service.search_tasks(query=q, limit=limit, offset=offset)
+
+
+@router.get("/reminders/overdue", response_model=ReminderBatch)
+def overdue_reminders(
+    _: Annotated[str, Depends(require_subject)],
+    service: Annotated[TaskService, Depends(get_task_service)],
+) -> ReminderBatch:
+    return service.get_overdue_reminders()
 
 
 @router.get("/{task_id}", response_model=TaskRead)
