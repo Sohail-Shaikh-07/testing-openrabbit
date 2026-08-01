@@ -138,7 +138,7 @@ Expected result:
 ```powershell
 openrabbit index --workspace .
 openrabbit review --pr <pr-number> --repo Sohail-Shaikh-07/testing-openrabbit --workspace . --dry-run
-openrabbit review --pr <pr-number> --repo Sohail-Shaikh-07/testing-openrabbit --workspace . --full --dry-run
+openrabbit review --pr <pr-number> --repo Sohail-Shaikh-07/testing-openrabbit --workspace . --mode full --dry-run
 ```
 
 Expected result:
@@ -153,7 +153,7 @@ Run read-only output first.
 
 ```powershell
 openrabbit describe --pr <pr-number> --repo Sohail-Shaikh-07/testing-openrabbit --workspace . --format json
-openrabbit ask --pr <pr-number> --repo Sohail-Shaikh-07/testing-openrabbit --workspace . --question "What is the most important risk in this PR?" --format json
+openrabbit ask "What is the most important risk in this PR?" --pr <pr-number> --repo Sohail-Shaikh-07/testing-openrabbit --workspace . --format json
 openrabbit improve --pr <pr-number> --repo Sohail-Shaikh-07/testing-openrabbit --workspace . --format json
 openrabbit labels --pr <pr-number> --repo Sohail-Shaikh-07/testing-openrabbit --workspace . --format json
 ```
@@ -162,7 +162,7 @@ Then test managed publishing where safe.
 
 ```powershell
 openrabbit describe --pr <pr-number> --repo Sohail-Shaikh-07/testing-openrabbit --workspace . --publish
-openrabbit ask --pr <pr-number> --repo Sohail-Shaikh-07/testing-openrabbit --workspace . --question "Summarize the validation risk." --publish
+openrabbit ask "Summarize the validation risk." --pr <pr-number> --repo Sohail-Shaikh-07/testing-openrabbit --workspace . --publish
 ```
 
 Expected result:
@@ -238,7 +238,7 @@ Expected result:
 
 ```powershell
 openrabbit review --pr <pr-number> --repo Sohail-Shaikh-07/testing-openrabbit --workspace . --dry-run
-openrabbit eval --workspace . --repo Sohail-Shaikh-07/testing-openrabbit --pr <pr-number>
+openrabbit eval --workspace . --repo Sohail-Shaikh-07/testing-openrabbit --prs <pr-number>
 ```
 
 Expected result:
