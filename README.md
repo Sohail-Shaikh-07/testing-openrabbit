@@ -1,6 +1,6 @@
 # TaskFlow API
 
-TaskFlow API is a small production-style FastAPI backend used to exercise AI pull request review quality. It models task creation, filtering, search, and background summary logic with a layered architecture.
+TaskFlow API is a small production-style FastAPI backend used to exercise AI pull request review quality. It models task creation, filtering, search, and background summary logic with a layered architecture. Task text fields are trimmed at the API boundary and reject whitespace-only values.
 
 ## Local Setup
 

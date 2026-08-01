@@ -25,6 +25,61 @@ def test_create_and_get_task(client: TestClient, auth_headers: dict[str, str]) -
     assert get_response.json()["id"] == created["id"]
 
 
+def test_create_task_trims_text_fields(
+    client: TestClient, auth_headers: dict[str, str]
+) -> None:
+    response = client.post(
+        "/api/v1/tasks",
+        headers=auth_headers,
+        json={
+            "title": "  Validate OpenRabbit  ",
+            "description": "  Exercise the full command surface.  ",
+            "owner": "  alice@example.com  ",
+        },
+    )
+
+    assert response.status_code == 201
+    payload = response.json()
+    assert payload["title"] == "Validate OpenRabbit"
+    assert payload["description"] == "Exercise the full command surface."
+    assert payload["owner"] == "alice@example.com"
+
+
+def test_task_text_fields_reject_whitespace_only_values(
+    client: TestClient, auth_headers: dict[str, str]
+) -> None:
+    create_response = client.post(
+        "/api/v1/tasks",
+        headers=auth_headers,
+        json={
+            "title": "   ",
+            "description": "Validation task",
+            "owner": "alice@example.com",
+        },
+    )
+
+    assert create_response.status_code == 422
+
+    valid_response = client.post(
+        "/api/v1/tasks",
+        headers=auth_headers,
+        json={
+            "title": "Validation task",
+            "description": "Exercise update validation",
+            "owner": "alice@example.com",
+        },
+    )
+    task_id = valid_response.json()["id"]
+
+    update_response = client.patch(
+        f"/api/v1/tasks/{task_id}",
+        headers=auth_headers,
+        json={"description": "\t\n"},
+    )
+
+    assert update_response.status_code == 422
+
+
 def test_list_tasks_supports_pagination_and_status_filter(
     client: TestClient, auth_headers: dict[str, str]
 ) -> None:
