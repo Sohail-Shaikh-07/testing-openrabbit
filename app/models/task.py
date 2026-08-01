@@ -54,7 +54,7 @@ class TaskCreate(BaseModel):
     priority: TaskPriority = TaskPriority.MEDIUM
     due_at: datetime | None = None
 
-    @field_validator("title", "description", "owner")
+    @field_validator("title", "description", "owner", mode="before")
     @classmethod
     def normalize_text_fields(cls, value: str) -> str:
         normalized = value.strip()
@@ -71,7 +71,7 @@ class TaskUpdate(BaseModel):
     priority: TaskPriority | None = None
     due_at: datetime | None = None
 
-    @field_validator("title", "description", "owner")
+    @field_validator("title", "description", "owner", mode="before")
     @classmethod
     def normalize_optional_text_fields(cls, value: str | None) -> str | None:
         if value is None:
