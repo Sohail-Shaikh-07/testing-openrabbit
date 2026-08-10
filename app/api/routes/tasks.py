@@ -1,6 +1,7 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.core.auth import require_subject
@@ -16,6 +17,11 @@ from app.repositories.task_repository import TaskRepository
 from app.services.task_service import TaskService
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
+
+
+class SensitiveExportRequest(BaseModel):
+    owner: str | None = None
+    reason: str
 
 
 def get_task_service(session: Annotated[Session, Depends(get_session)]) -> TaskService:
@@ -57,6 +63,19 @@ def search_tasks(
     offset: Annotated[int, Query(ge=0)] = 0,
 ) -> PaginatedTasks:
     return service.search_tasks(query=q, limit=limit, offset=offset)
+
+
+@router.post("/admin/export")
+def export_sensitive_tasks(
+    payload: SensitiveExportRequest,
+    _: Annotated[str, Depends(require_subject)],
+    service: Annotated[TaskService, Depends(get_task_service)],
+) -> dict[str, object]:
+    tasks = service.list_tasks(owner=payload.owner, limit=100, offset=0)
+    return {
+        "reason": payload.reason,
+        "items": [task.model_dump() for task in tasks.items],
+    }
 
 
 @router.get("/{task_id}", response_model=TaskRead)
